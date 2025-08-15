@@ -1,5 +1,6 @@
 #include "action.h"
 #include "action_layer.h"
+#include "keymap_us.h"
 #include "modifiers.h"
 #include "quantum.h"
 #include "quantum_keycodes.h"
@@ -14,14 +15,16 @@
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
-        case LCTL(KC_BSPC):
-            if (record->event.pressed && (layer_state_is(1))) {
-                unregister_mods(MOD_BIT_LGUI);
-                register_mods(MOD_BIT_LCTRL);
-                tap_code16(KC_BSPC);
-                unregister_mods(MOD_BIT_LCTRL);
+        case MO(7):
+            if (record->event.pressed) {
+                layer_on(7);  // or `layer_move(7)` if you want exclusive activation
+            } else {
+                layer_off(7);
+                if (layer_state_is(1)) {
+                    unregister_mods(MOD_BIT(KC_LGUI));
+                }
             }
-            return false;
+            return false;  // We handled it
     }
     return true;
 }
@@ -29,10 +32,11 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // Layer 0: Base Layer
     [0] = LAYOUT_split_3x5_3(
-        KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,           KC_Y,    KC_U,    KC_I,    KC_O,            KC_P,
-        KC_A,    KC_S,    KC_D,    KC_F,    KC_G,           KC_H,    KC_J,    KC_K,    KC_L,            KC_TAB,
-        KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,           KC_N,    KC_M,    KC_DOUBLE_QUOTE, KC_QUOT, KC_LALT ,
-        LM(3, MOD_LGUI),  KC_SPACE,         KC_LCTL,        KC_LSFT, LT(1,KC_BSPC),    LT(4,KC_ESC)),
+        KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,           KC_Y,    KC_U,    KC_I,    KC_O,          KC_P,
+        KC_A,    KC_S,    KC_D,    KC_F,    KC_G,           KC_H,    KC_J,    KC_K,    KC_L,          KC_TAB,
+        KC_Z, KC_LCTL,    KC_C,    KC_V,    KC_B,           KC_N,    KC_M,    KC_QUOTE,KC_DOUBLE_QUOTE, KC_X,
+        LM(3, MOD_LGUI), KC_SPACE,         MO(4),          LSFT_T(KC_ESC),  LT(1,KC_BSPC),   KC_LALT
+        ),
 
     // Layer 2: Symbols/Nav Layer
     [1] = LAYOUT_split_3x5_3(
@@ -50,10 +54,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
     // Layer 1: Compositor+general layer
     [3] = LAYOUT_split_3x5_3(
-        KC_Q,    KC_1,    KC_2,    KC_3,        KC_GRV,     KC_K,    KC_O,    KC_P,    KC_W,        KC_S,
-        KC_A,    KC_4,    KC_5,    KC_6,        KC_LEFT,       KC_LEFT, KC_DOWN, KC_UP,   KC_RIGHT,    KC_F,
-        KC_Z,    KC_SPC,  KC_C,    LSFT(KC_E),  KC_B,       KC_I,    KC_T,    KC_M,    LALT(KC_R),  KC_D,
-                          KC_TRNS,     KC_LCTL,   KC_LALT,      LCTL(KC_BSPC),KC_LSFT , KC_RALT
+        KC_Q,    KC_1,    KC_2,    KC_3,        KC_GRV,         KC_K,    KC_O,    KC_P,    KC_W,        KC_S,
+        KC_A,    KC_4,    KC_5,    KC_6,        KC_LEFT,        KC_LEFT, KC_DOWN, KC_UP,   KC_RIGHT,    KC_F,
+        KC_Z,    KC_SPC,  KC_C,    LSFT(KC_E),  KC_B,           KC_I,    KC_T,    KC_M,    LALT(KC_R),  KC_D,
+                          KC_TRNS,     KC_LCTL,   KC_LALT,      MO(7), KC_LSFT , KC_RALT
     ),
 
 
@@ -61,8 +65,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [4] = LAYOUT_split_3x5_3(
         KC_PAST, KC_1,    KC_2,    KC_3,    KC_0,          KC_WH_U, KC_F1,   KC_F2,   KC_F3,   KC_F11,
         KC_PSLS, KC_4,    KC_5,    KC_6,    KC_PPLS,       KC_F10,  KC_F4,   KC_F5,   KC_F6,   KC_END,
-        KC_EQL, KC_7,    KC_8,    KC_9,    KC_MINS,       KC_WH_D, KC_F7,   KC_F8,   KC_F9,   KC_F12,
-                          KC_LCTL,   KC_LALT, KC_LSFT,       KC_TRNS, KC_ENT,  KC_TRNS
+        KC_EQL, KC_7,    KC_8,    KC_9,    KC_MINS,       KC_WH_D, KC_F7,   KC_F8,   KC_F9,   KC_EQL,
+                          KC_LCTL,   KC_LALT, KC_LSFT,       KC_TRNS, KC_ENT,  KC_F12
     ),
 
 
@@ -80,7 +84,14 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,           KC_N,    KC_M,    KC_DOUBLE_QUOTE, KC_QUOT, KC_LALT,
         LM(3, MOD_LGUI),KC_LSFT , LCTL_T(KC_ESC),           MO(4),   KC_LSFT  ,KC_SPACE),
 
-    // Layer 2: Symbols/Nav Layer
+[7] = LAYOUT_split_3x5_3(
+    // Left Hand                                            // Right Hand
+    KC_NO,     KC_NO,       KC_NO,        KC_NO,         KC_NO,            KC_WH_U,  LCTL(KC_PGUP),  LCTL(KC_PGDN), LCTL(KC_T),  KC_NO,
+    KC_NO,     KC_NO,       KC_BTN4,      KC_BTN5,       KC_NO,            KC_WH_D,  KC_NO,          KC_NO,         KC_NO,       LCTL(KC_W),
+    KC_NO,     KC_NO,       KC_NO,        KC_NO,         KC_NO,            KC_BTN1,  KC_BTN2,        KC_NO,         KC_NO,       KC_NO,
+                            _______,      _______,       _______,          _______,   _______,      _______
+),
+
 
 };
 #if defined(ENCODER_ENABLE) && defined(ENCODER_MAP_ENABLE)
